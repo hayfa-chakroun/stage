@@ -1,52 +1,51 @@
-import pytesseract
-from PIL import Image
-import openpyxl
-import re
+import pandas as pd
 
-# Chemin vers l'exécutable Tesseract (modifie-le si nécessaire)
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Charger le fichier Excel
+file_path = r'C:\Users\hayfa\Desktop\pip.xlsx'  # remplacez par le chemin de votre fichier
+df = pd.read_excel(file_path, header=None)
 
-# Fonction pour extraire le texte d'une image
-def extract_text_from_image(image_path):
-    image = Image.open(image_path)
-    text = pytesseract.image_to_string(image)
-    return text
+# Initialiser les listes pour les nouvelles colonnes
+account_names = []
+applications = []
+disabled_status = []
 
-# Fonction pour extraire le nom et l'application du texte
-def extract_info_from_text(text):
-    nom = re.search(r'Nom:\s*(.*)', text)
-    application = re.search(r'Application\s*:\s*(.*)', text)
-    nom_value = nom.group(1) if nom else 'N/A'
-    application_value = application.group(1) if application else 'N/A'
-    return nom_value, application_value
+# Parcourir les données pour les trier dans les bonnes colonnes
+for row in df.itertuples(index=False):
+    for cell in row:
+        cell_str = str(cell).lower()  # Convertir en minuscules pour faciliter la comparaison
+        if cell_str in ['disabled', 'enabled']:
+            disabled_status.append(cell)
+        elif cell_str in [ 'Facebook', 'Instagram', 'Snapchat', 'Twitter', 'TikTok', 'LinkedIn', 'Pinterest', 'Reddit', 'Tumblr', 'Quora',
+    'WhatsApp', 'Telegram', 'Messenger', 'WeChat', 'Viber', 'Line', 'Signal', 'Skype', 'KakaoTalk', 'Discord',
+    'Microsoft Word', 'Microsoft Excel', 'Microsoft PowerPoint', 'Outlook', 'Google Docs', 'Google Sheets', 'Google Slides', 'Gmail',
+    'Slack', 'Trello', 'Asana', 'Notion', 'Evernote', 'OneNote', 'Dropbox', 'Todoist',
+    'YouTube', 'Netflix', 'Hulu', 'Spotify', 'Amazon Prime Video', 'Disney+', 'HBO Max', 'Apple Music', 'SoundCloud', 'Twitch',
+    'Amazon', 'eBay', 'Alibaba', 'AliExpress', 'Etsy', 'Shopify', 'Walmart', 'Rakuten', 'JD.com', 'Taobao',
+    'PayPal', 'Venmo', 'Cash App', 'Robinhood', 'Revolut', 'Square', 'Mint', 'Acorns', 'Coinbase', 'Binance',
+    'MyFitnessPal', 'Fitbit', 'Strava', 'Nike Training Club', 'Peloton', 'Garmin Connect', 'Headspace', 'Calm', 'Apple Health', 'Google Fit',
+    'Uber', 'Lyft', 'Airbnb', 'Booking.com', 'Expedia', 'TripAdvisor', 'Skyscanner', 'Google Maps', 'Waze', 'Hopper',
+    'BBC News', 'CNN', 'The New York Times', 'The Guardian', 'Reuters', 'Bloomberg', 'Al Jazeera', 'Fox News', 'NPR', 'The Washington Post',
+    'Uber Eats', 'DoorDash', 'Grubhub', 'Deliveroo', 'Postmates', 'Just Eat', 'Zomato', 'Yelp', 'OpenTable', 'Starbucks']:  # Ajoutez toutes les applications que vous voulez reconnaître
+            applications.append(cell)
+        else:
+            account_names.append(cell)
 
-# Fonction pour écrire le texte dans un fichier Excel
-def write_text_to_excel(nom, application, excel_path):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Texte extrait"
-    
+# Assurer que les colonnes ont la même longueur
+max_length = max(len(account_names), len(applications), len(disabled_status))
+account_names.extend([''] * (max_length - len(account_names)))
+applications.extend([''] * (max_length - len(applications)))
+disabled_status.extend([''] * (max_length - len(disabled_status)))
 
-    
-    # Écrire les valeurs
-    ws.cell(row=1, column=1, value=nom)
-    ws.cell(row=1, column=2, value=application)
-    
-    wb.save(excel_path)
+# Créer un nouveau DataFrame avec la structure souhaitée
+data = {
+    'Account name': account_names,
+    'disabled': disabled_status,
+    'application': applications
+}
+new_df = pd.DataFrame(data)
 
-# Chemin de l'image à traiter
-image_path = 'C:\\Users\\hayfa\\Desktop\\for.jpg'
+# Sauvegarder le nouveau DataFrame dans un fichier Excel
+output_path = r'C:\Users\hayfa\formatted_idm_file.xlsx'  # remplacez par le chemin de votre fichier de sortie
+new_df.to_excel(output_path, index=False)
 
-# Chemin du fichier Excel de sortie
-excel_path = r'C:\Users\hayfa\Desktop\Classeur2.xlsx'
-
-# Extraire le texte de l'image
-text = extract_text_from_image(image_path)
-
-# Extraire les informations du texte
-nom, application = extract_info_from_text(text)
-
-# Écrire les informations dans le fichier Excel
-write_text_to_excel(nom, application, excel_path)
-
-print(f"Le texte a été extrait et sauvegardé dans {excel_path}")
+print(f'Transformed file saved to {output_path}')
