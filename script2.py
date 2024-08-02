@@ -1,7 +1,7 @@
 import pytesseract
 from PIL import Image
 import openpyxl
-import pandas as pd
+import re
 
 # Chemin vers l'exécutable Tesseract (modifie-le si nécessaire)
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -12,57 +12,41 @@ def extract_text_from_image(image_path):
     text = pytesseract.image_to_string(image)
     return text
 
+# Fonction pour extraire le nom et l'application du texte
+def extract_info_from_text(text):
+    nom = re.search(r'Nom:\s*(.*)', text)
+    application = re.search(r'Application\s*:\s*(.*)', text)
+    nom_value = nom.group(1) if nom else 'N/A'
+    application_value = application.group(1) if application else 'N/A'
+    return nom_value, application_value
+
 # Fonction pour écrire le texte dans un fichier Excel
-def write_text_to_excel(text, excel_path):
+def write_text_to_excel(nom, application, excel_path):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Texte extrait"
     
-    # Diviser le texte en lignes et les écrire dans des cellules
-    for i, line in enumerate(text.split('\n')):
-        ws.cell(row=i+1, column=1, value=line)
+
+    
+    # Écrire les valeurs
+    ws.cell(row=1, column=1, value=nom)
+    ws.cell(row=1, column=2, value=application)
     
     wb.save(excel_path)
 
 # Chemin de l'image à traiter
-image_path = 'C:\\Users\\hayfa\\Desktop\\mine.jpg'
+image_path = 'C:\\Users\\hayfa\\Desktop\\for.jpg'
 
 # Chemin du fichier Excel de sortie
-excel_path = 'C:\\Users\\hayfa\\Desktop\\MonExcel.xlsx'
+excel_path = r'C:\Users\hayfa\Desktop\Classeur2.xlsx'
 
 # Extraire le texte de l'image
 text = extract_text_from_image(image_path)
 
-# Écrire le texte dans le fichier Excel
-write_text_to_excel(text, excel_path)
+# Extraire les informations du texte
+nom, application = extract_info_from_text(text)
 
-print(f"Le texte a été extrait et sauvegardé dans {excel_path}") 
-# *********************************************     Excel>>>>Excel IDM(fichier personnalisé) ************************************************************* #
+# Écrire les informations dans le fichier Excel
+write_text_to_excel(nom, application, excel_path)
 
-# Lire le fichier Excel aléatoire
-input_file = 'C:\Users\hayfa\myenv\Lib\site-packages\numpy\random'
-df = pd.read_excel(input_file)
-
-df.columns = ['Account Name ', 'Account Disabled', 'Application']
-df.columns = ['Account Name ', 'Entitlement Disabled', 'Application']
-
-
-# Ajouter des colonnes nécessaires pour le format IDM
-df['IDM_Metadata'] = 'Example Metadata'
-
-# Écrire le fichier formaté en utilisant openpyxl
-output_file = 'formatted_idm_file.xlsx'
-df.to_excel(output_file, index=False, engine='openpyxl')
-
-# Appliquer un formatage spécifique
-workbook = openpyxl.load_workbook(output_file)
-worksheet = workbook.active
-
-# Appliquer des styles spécifiques
-for cell in worksheet[1]:
-    cell.font = openpyxl.styles.Font(bold=True)
-
-# Sauvegarder le fichier avec les styles appliqués
-workbook.save(output_file)
-
-print(f"Le fichier {output_file} a été créé avec succès.")
+print(f"Le texte a été extrait et sauvegardé dans {excel_path}")
