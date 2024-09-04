@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask File Processing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-container {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="file"],
+        .form-group input[type="text"],
+        .form-group input[type="submit"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        .form-group input[type="submit"] {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 20px;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>File Processing with Flask</h1>
+        
+        <!-- Form for processing files -->
+        <div class="form-container">
+            <h2>Process Files</h2>
+            <form id="process-files-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="hayfa_folder">Hayfa Folder Path:</label>
+                    <input type="text" id="hayfa_folder" name="hayfa_folder" required>
+                </div>
+                <div class="form-group">
+                    <label for="downloads_folder">Downloads Folder Path:</label>
+                    <input type="text" id="downloads_folder" name="downloads_folder" required>
+                </div>
+                <div class="form-group">
+                    <label for="excel_file">Excel File:</label>
+                    <input type="file" id="excel_file" name="excel_file" accept=".xlsx, .xls" required>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Process Files">
+                </div>
+            </form>
+        </div>
+
+        <!-- Form for processing Excel files -->
+        <div class="form-container">
+            <h2>Process Excel File</h2>
+            <form id="process-excel-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="excel_file_process">Excel File:</label>
+                    <input type="file" id="excel_file_process" name="excel_file" accept=".xlsx, .xls" required>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Process Excel">
+                </div>
+            </form>
+        </div>
+
+        <!-- Popup for results -->
+        <div class="popup" id="popup">
+            <span id="popup-message"></span>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('process-files-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            fetch('/process-files', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                showPopup(data.message);
+            }).catch(error => {
+                showPopup('Une erreur est survenue : ' + error.message);
+            });
+        });
+
+        document.getElementById('process-excel-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            fetch('/process-excel', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                showPopup(data.message);
+                if (data.file_url) {
+                    document.getElementById('popup').innerHTML += `<br><a href="${data.file_url}" target="_blank">Télécharger le fichier transformé</a>`;
+                }
+            }).catch(error => {
+                showPopup('Une erreur est survenue : ' + error.message);
+            });
+        });
+
+        function showPopup(message) {
+            var popup = document.getElementById('popup');
+            var popupMessage = document.getElementById('popup-message');
+            popupMessage.innerText = message;
+            popup.style.display = 'block';
+            setTimeout(function() {
+                popup.style.display = 'none';
+            }, 5000); // Le message disparaît après 5 secondes
+        }
+    </script>
+</body>
+</html>
